@@ -3,7 +3,7 @@ import streamlit as st
 
 st.set_page_config(page_title="Is My Bus Lying? (TTC)", layout="wide")
 
-CSV_URL = "https://raw.githubusercontent.com/andriawong12/is_my_bus_lying/main/data/fragility_by_timeband.csv"
+CSV_URL = "https://raw.githubusercontent.com/andriawong12/is_my_bus_lying/main/data/fragility_by_timeband_latest.csv"
 
 # Time band ordering (must match exactly what your GTFS script outputs)
 BAND_ORDER = [

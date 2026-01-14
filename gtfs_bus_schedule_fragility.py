@@ -3,6 +3,8 @@ import zipfile
 import requests
 import pandas as pd
 
+from datetime import date
+
 from pathlib import Path
 Path("data").mkdir(exist_ok=True)
 
@@ -244,6 +246,22 @@ print(
     )
 )
 
-out = fragility_base.sort_values(["route_id", "direction_id", "time_band"], ascending=True)
-out.to_csv("data/fragility_by_timeband.csv", index=False)
-print("Saved data/fragility_by_timeband.csv")
+# =========================
+# FINAL OUTPUT
+# =========================
+
+today = date.today().isoformat()  # e.g. 2026-01-14
+
+out = fragility_base.sort_values(
+    ["route_id", "direction_id", "time_band"],
+    ascending=True
+)
+
+dated_path = f"data/fragility_by_timeband_{today}.csv"
+latest_path = "data/fragility_by_timeband_latest.csv"
+
+out.to_csv(dated_path, index=False)
+out.to_csv(latest_path, index=False)
+
+print(f"Saved {dated_path}")
+print(f"Saved {latest_path}")
