@@ -3,6 +3,9 @@ import zipfile
 import requests
 import pandas as pd
 
+from pathlib import Path
+Path("data").mkdir(exist_ok=True)
+
 base_url = "https://ckan0.cf.opendata.inter.prod-toronto.ca"
 pkg = requests.get(
     base_url + "/api/3/action/package_show",
@@ -241,9 +244,6 @@ print(
     )
 )
 
-out = fragility_base.sort_values("fragility_score", ascending=False)
-
-from pathlib import Path
-Path("data").mkdir(exist_ok=True)
+out = fragility_base.sort_values(["route_id", "direction_id", "time_band"], ascending=True)
 out.to_csv("data/fragility_by_timeband.csv", index=False)
 print("Saved data/fragility_by_timeband.csv")
