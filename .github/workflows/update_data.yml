@@ -2,8 +2,7 @@ name: Update TTC fragility CSV
 
 on:
   schedule:
-    # Daily at 05:15 UTC (~00:15 Toronto winter, ~01:15 summer)
-    - cron: "15 5 * * *"
+    - cron: "15 10 * * *"   # daily at 10:15 UTC
   workflow_dispatch: {}
 
 permissions:
