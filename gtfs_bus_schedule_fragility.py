@@ -185,20 +185,18 @@ fragility_base = summary.merge(
 fragility_base["median_layover_min"] = fragility_base["median_layover_min"].fillna(10)
 
 # Layover score: 0 min → 1.0 (bad), 10+ min → 0.0 (good)
-fragility_base["layover_score"] = (
-    1 - (fragility_base["median_layover_min"].clip(0, 10) / 10)
-)
+fragility_base["layover_score"] = 1 / (1 + fragility_base["median_layover_min"])
 
-# Runtime variability score: normalize to 0–1 using percentiles
 max_spread = fragility_base["runtime_spread_min"].quantile(0.95)
 fragility_base["runtime_score"] = (
-    fragility_base["runtime_spread_min"] / max_spread
-).clip(0, 1)
+    fragility_base["runtime_spread_min"] /
+    (fragility_base["runtime_spread_min"] + max_spread)
+)
 
 fragility_base["fragility_score"] = (
     50 * fragility_base["layover_score"] +
     50 * fragility_base["runtime_score"]
-).round(1)
+).round(2)
 
 def explain(row):
     parts = []
@@ -256,6 +254,8 @@ out = fragility_base.sort_values(
     ["route_id", "direction_id", "time_band"],
     ascending=True
 )
+
+out["data_updated_date"] = today
 
 dated_path = f"data/fragility_by_timeband_{today}.csv"
 latest_path = "data/fragility_by_timeband_latest.csv"
