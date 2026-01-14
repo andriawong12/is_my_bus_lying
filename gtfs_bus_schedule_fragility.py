@@ -184,19 +184,24 @@ fragility_base = summary.merge(
 # Fill missing layovers with a "safe" value (means not fragile on this axis)
 fragility_base["median_layover_min"] = fragility_base["median_layover_min"].fillna(10)
 
-# Layover score: 0 min → 1.0 (bad), 10+ min → 0.0 (good)
-fragility_base["layover_score"] = 1 / (1 + fragility_base["median_layover_min"])
+# Cap layover influence
+fragility_base["layover_score"] = (
+    1 / (1 + fragility_base["median_layover_min"])
+).clip(0, 1)
 
+# Smooth variability score
 max_spread = fragility_base["runtime_spread_min"].quantile(0.95)
 fragility_base["runtime_score"] = (
     fragility_base["runtime_spread_min"] /
     (fragility_base["runtime_spread_min"] + max_spread)
 )
 
+# Weighted blend (no saturation)
 fragility_base["fragility_score"] = (
-    50 * fragility_base["layover_score"] +
-    50 * fragility_base["runtime_score"]
+    35 * fragility_base["layover_score"] +
+    65 * fragility_base["runtime_score"]
 ).round(2)
+
 
 def explain(row):
     parts = []
