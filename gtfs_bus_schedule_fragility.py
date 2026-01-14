@@ -184,24 +184,30 @@ fragility_base = summary.merge(
 # Fill missing layovers with a "safe" value (means not fragile on this axis)
 fragility_base["median_layover_min"] = fragility_base["median_layover_min"].fillna(10)
 
-# Cap layover influence
-fragility_base["layover_score"] = (
-    1 / (1 + fragility_base["median_layover_min"])
-).clip(0, 1)
+# --- Robust normalizer for variability ---
+# Use a robust scale: median + 2*IQR (stable, not super sensitive)
+spread = fragility_base["runtime_spread_min"].clip(lower=0)
 
-# Smooth variability score
-max_spread = fragility_base["runtime_spread_min"].quantile(0.95)
-fragility_base["runtime_score"] = (
-    fragility_base["runtime_spread_min"] /
-    (fragility_base["runtime_spread_min"] + max_spread)
-)
+q50 = spread.quantile(0.50)
+iqr = spread.quantile(0.75) - spread.quantile(0.25)
+k = float(q50 + 2 * iqr) if iqr > 0 else float(spread.quantile(0.90))
+k = max(k, 1.0)
 
-# Weighted blend (no saturation)
+# --- Component scores (both in [0,1), never exactly 1) ---
+lay = fragility_base["median_layover_min"].clip(lower=0)
+
+# Layover: 0 -> ~0.95, then decays (prevents instant max)
+fragility_base["layover_score"] = 0.95 / (1 + lay)
+
+# Variability: bounded growth, never 1
+fragility_base["runtime_score"] = spread / (spread + k)
+
+# --- Composite score ---
+# Weights sum to 95 so the top is <= 95%
 fragility_base["fragility_score"] = (
     35 * fragility_base["layover_score"] +
-    65 * fragility_base["runtime_score"]
+    60 * fragility_base["runtime_score"]
 ).round(2)
-
 
 def explain(row):
     parts = []
